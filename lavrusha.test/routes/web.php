@@ -12,7 +12,6 @@
 */
 
 
-
 use Illuminate\Http\Request;
 
 
@@ -20,47 +19,21 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 
-Route::get('/',function(){
-    
+Route::get('/', function () {
+
     return view('start');
 });
 
-Route::get('/postsmanager','PostController@manager');
-Route::get('/postsmanager/{id}','PostController@usersposts');
-Route::delete('/postsmanager/{post}','PostController@userspostsdelete');
-Route::get('/readposts','PostController@readposts');
-Route::get('/usersmanager','UserController@userlist');
-Route::get('/usersmanager/{user}','UserController@userinfo');
-Route::get('/readposts/{post}','PostController@readthispost');
+Route::get('/postsmanager', 'PostController@manager')->middleware("isAdmin");
+Route::get('/postsmanager/{id}', 'PostController@usersposts');
+Route::delete('/postsmanager/{post}', 'PostController@userspostsdelete')->middleware("isAdmin");
+Route::get('/readposts', 'PostController@readposts');
+Route::get('/usersmanager', 'UserController@userlist')->middleware("isAdmin");
+Route::get('/usersmanager/{user}', 'UserController@userinfo')->middleware("isAdmin");
+Route::get('/readposts/{post}', 'PostController@readthispost');
 
-Route::delete('/usersmanager/{user}',function(\App\User $user)
-{
-    $user->delete();
-   return redirect('/usersmanager');
-   
-});
+Route::delete('/usersmanager/{user}', 'UserController@deleteUser')->middleware("isAdmin");
 
-Route::get("/postredactor",function(){
-    if(Illuminate\Support\Facades\Auth::user()){
-    return view('postredact');}
-    else return abort(404);
-})->name('postredactor');
+Route::get("/postredactor", 'PostController@redactPost')->name('postredactor')->middleware("isAuth");
 
-
-Route::post('/postredactor',function(Request $req){
-    $validator=Validator::make($req->all(),
-            [
-                'name' =>'required|max:255',
-            ]);
-   $post=new App\Post;
-   $post->label=$req->name;
-   $post->text=$req->text;
-   $post->user= Illuminate\Support\Facades\Auth::user()->email ?? "Anonim";
-   
-   $post->save();
-   return redirect('/readposts');
-    
-    
-    
-    
-});
+Route::post('/postredactor', 'PostController@postRequest')->middleware("isAuth");
